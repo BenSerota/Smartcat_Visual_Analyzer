@@ -32,7 +32,7 @@ Return ONLY valid JSON.`
     const response = await openai.chat.completions.create({
       model: "gpt-5-nano-2025-08-07",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
+
       response_format: { type: "json_object" }
     })
 
@@ -80,7 +80,7 @@ Return ONLY a valid JSON object with a "terms" array.`
     const response = await openai.chat.completions.create({
       model: "gpt-5-nano-2025-08-07",
       messages: [{ role: "user", content: prompt }],
-      temperature: 0.3,
+
       response_format: { type: "json_object" }
     })
 

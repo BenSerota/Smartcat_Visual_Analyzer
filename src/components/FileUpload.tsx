@@ -40,15 +40,23 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
 
   const handleFile = (file: File) => {
     // Validate file type
-    const validTypes = ['text/plain', 'application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document']
-    if (!validTypes.includes(file.type) && !file.name.endsWith('.txt')) {
-      alert('Please upload a .txt, .pdf, or .docx file')
+    const validTypes = [
+      'text/plain', 
+      'text/html',
+      'application/pdf', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    ]
+    const validExtensions = ['.txt', '.html', '.htm', '.pdf', '.docx']
+    const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
+    
+    if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
+      alert('Please upload a .txt, .html, .pdf, or .docx file')
       return
     }
 
-    // Validate file size (100KB for MVP)
-    if (file.size > 100 * 1024) {
-      alert('File size must be less than 100KB for the MVP version')
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('File size must be less than 5MB')
       return
     }
 
@@ -67,7 +75,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
         <input
           ref={fileInputRef}
           type="file"
-          accept=".txt,.pdf,.docx"
+          accept=".txt,.html,.htm,.pdf,.docx"
           onChange={handleFileInput}
           style={{ display: 'none' }}
           disabled={isProcessing}
@@ -84,8 +92,8 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
             <div className="upload-icon">📄</div>
             <h2>Drop your file here</h2>
             <p>or click to browse</p>
-            <p className="file-types">Supports .txt files (PDF and DOCX coming soon)</p>
-            <p className="file-size">Maximum file size: 100KB</p>
+            <p className="file-types">Supports .txt, .html, .pdf, and .docx files</p>
+            <p className="file-size">Maximum file size: 5MB</p>
           </>
         )}
       </div>

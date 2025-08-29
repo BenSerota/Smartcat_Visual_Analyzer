@@ -89,9 +89,9 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
           </div>
         ) : (
           <>
-            <div className="upload-icon">📄</div>
-            <h2>Drop your file here</h2>
-            <p>or click to browse</p>
+            <div className="upload-icon">📜</div>
+            <h2>Present thy scroll!</h2>
+            <p>Drop your document here, or click to browse</p>
             <p className="file-types">Supports .txt, .html, .pdf, and .docx files</p>
             <p className="file-size">Maximum file size: 5MB</p>
           </>

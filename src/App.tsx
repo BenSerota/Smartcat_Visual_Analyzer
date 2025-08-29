@@ -7,12 +7,15 @@ import { GlossaryTerm } from './types'
 function App() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [results, setResults] = useState<GlossaryTerm[] | null>(null)
+  const [documentContext, setDocumentContext] = useState<any | null>(null)
+  const [fileName, setFileName] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
 
   const handleFileUpload = async (file: File) => {
     setIsProcessing(true)
     setError(null)
     setResults(null)
+    setFileName(file.name)
 
     const formData = new FormData()
     formData.append('file', file)
@@ -29,6 +32,7 @@ function App() {
 
       const data = await response.json()
       setResults(data.terms)
+      setDocumentContext(data.context)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred')
     } finally {
@@ -39,8 +43,9 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
-        <h1>Glossary Suggester</h1>
-        <p>AI-powered tool to identify terms that should not be translated</p>
+        <div className="jester-logo">🃏</div>
+        <h1>Jester the Glossary Suggester</h1>
+        <p>Your witty AI companion for identifying terms that should not be translated</p>
       </header>
 
       <main className="app-main">
@@ -54,10 +59,14 @@ function App() {
 
         {results && (
           <ResultsDisplay 
-            terms={results} 
+            terms={results}
+            fileName={fileName}
+            documentContext={documentContext}
             onReset={() => {
               setResults(null)
               setError(null)
+              setDocumentContext(null)
+              setFileName('')
             }}
           />
         )}

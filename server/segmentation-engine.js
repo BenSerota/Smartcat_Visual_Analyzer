@@ -65,17 +65,22 @@ class SegmentationEngine {
       contextGroups.set(context.id, {
         context,
         elements: [],
-        boundingBox: context.boundingBox
+        boundingBox: context.boundingBox,
+        topic: context.topic,
+        semanticContext: context.semanticContext
       })
     })
 
-    // Assign text elements to visual contexts based on spatial proximity
+    // Assign text elements to visual contexts based on spatial proximity AND semantic similarity
     textElements.forEach(element => {
       const bestContext = this.findBestVisualContext(element, visualContexts)
       if (bestContext && contextGroups.has(bestContext.id)) {
         contextGroups.get(bestContext.id).elements.push(element)
       }
     })
+
+    // Apply semantic grouping for elements with similar topics
+    this.applySemanticGrouping(contextGroups, textElements)
 
     return contextGroups
   }
@@ -123,7 +128,10 @@ class SegmentationEngine {
     const withinContext = this.isWithinBounds(elementBox, contextBox)
     const withinScore = withinContext ? 0.3 : 0
 
-    return overlapScore + withinScore
+    // Semantic similarity score
+    const semanticScore = this.calculateSemanticSimilarity(element, context)
+
+    return overlapScore + withinScore + semanticScore
   }
 
   /**
@@ -442,6 +450,127 @@ class SegmentationEngine {
       // Finally by X position (left to right)
       return a.coordinates.x - b.coordinates.x
     })
+  }
+
+  /**
+   * Apply semantic grouping to combine elements with similar topics
+   * @param {Map} contextGroups - Map of context groups
+   * @param {Array} textElements - Array of text elements
+   */
+  applySemanticGrouping(contextGroups, textElements) {
+    const topicGroups = new Map()
+
+    // Group contexts by topic
+    contextGroups.forEach((group, contextId) => {
+      if (group.topic) {
+        if (!topicGroups.has(group.topic)) {
+          topicGroups.set(group.topic, [])
+        }
+        topicGroups.get(group.topic).push(group)
+      }
+    })
+
+    // Merge groups with the same topic if they're spatially close
+    topicGroups.forEach((groups, topic) => {
+      if (groups.length > 1) {
+        this.mergeSemanticGroups(groups, topic)
+      }
+    })
+  }
+
+  /**
+   * Merge groups that share the same semantic topic
+   * @param {Array} groups - Array of groups with same topic
+   * @param {string} topic - Shared topic
+   */
+  mergeSemanticGroups(groups, topic) {
+    // Sort groups by spatial proximity
+    groups.sort((a, b) => {
+      const distance = this.calculateDistance(a.boundingBox, b.boundingBox)
+      return distance
+    })
+
+    // Merge groups that are close enough
+    for (let i = 0; i < groups.length - 1; i++) {
+      const group1 = groups[i]
+      const group2 = groups[i + 1]
+      
+      const distance = this.calculateDistance(group1.boundingBox, group2.boundingBox)
+      
+      // If groups are close enough, merge them
+      if (distance < 200) { // 200px threshold
+        group1.elements.push(...group2.elements)
+        group1.boundingBox = this.calculateCombinedBoundingBox([
+          ...group1.elements,
+          ...group2.elements
+        ])
+        group1.semanticContext = `Combined ${topic} context`
+        
+        // Remove the merged group
+        groups.splice(i + 1, 1)
+        i-- // Adjust index
+      }
+    }
+  }
+
+  /**
+   * Calculate semantic similarity between element and context
+   * @param {Object} element - Text element
+   * @param {Object} context - Visual context
+   * @returns {number} Similarity score (0-0.2)
+   */
+  calculateSemanticSimilarity(element, context) {
+    if (!context.topic || !element.text) return 0
+
+    const elementText = element.text.toLowerCase()
+    const topic = context.topic.toLowerCase()
+    const semanticContext = context.semanticContext ? context.semanticContext.toLowerCase() : ''
+
+    // Check for keyword matches
+    const topicKeywords = topic.split(/[\s\-_]+/)
+    const contextKeywords = semanticContext.split(/[\s\-_]+/)
+    
+    let matches = 0
+    let totalKeywords = topicKeywords.length + contextKeywords.length
+
+    // Count matches in element text
+    topicKeywords.forEach(keyword => {
+      if (keyword.length > 2 && elementText.includes(keyword)) {
+        matches++
+      }
+    })
+
+    contextKeywords.forEach(keyword => {
+      if (keyword.length > 2 && elementText.includes(keyword)) {
+        matches++
+      }
+    })
+
+    // Return semantic score (max 0.2 to not overpower spatial scoring)
+    return totalKeywords > 0 ? (matches / totalKeywords) * 0.2 : 0
+  }
+
+  /**
+   * Calculate distance between two bounding boxes
+   * @param {Object} box1 - First bounding box
+   * @param {Object} box2 - Second bounding box
+   * @returns {number} Distance in pixels
+   */
+  calculateDistance(box1, box2) {
+    const center1 = {
+      x: box1.x + box1.width / 2,
+      y: box1.y + box1.height / 2
+    }
+    
+    const center2 = {
+      x: box2.x + box2.width / 2,
+      y: box2.y + box2.height / 2
+    }
+
+    const dx = center1.x - center2.x
+    const dy = center1.y - center2.y
+
+    return Math.sqrt(dx * dx + dy * dy)
   }
 }
 

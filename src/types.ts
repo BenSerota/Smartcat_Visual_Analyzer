@@ -9,6 +9,10 @@ export interface VisualSegment {
   confidence: 'high' | 'medium' | 'low'
   translation?: string
   notes?: string
+  // Enhanced semantic context
+  topic?: string
+  semanticContext?: string
+  contentElements?: ContentElement[]
 }
 
 export interface BoundingBox {
@@ -42,6 +46,10 @@ export interface VisualContext {
   description: string
   boundingBox: BoundingBox
   relatedElements: string[] // IDs of related text elements
+  // Enhanced semantic context
+  topic?: string
+  semanticContext?: string
+  contentElements?: ContentElement[]
 }
 
 export interface TextElement {
@@ -53,6 +61,13 @@ export interface TextElement {
   color?: string
   isBold?: boolean
   isItalic?: boolean
+}
+
+export interface ContentElement {
+  type: 'text' | 'image' | 'chart' | 'shape' | 'other'
+  content?: string // For text elements
+  description?: string // For images, charts, etc.
+  boundingBox?: BoundingBox
 }
 
 export interface PowerPointAnalysis {

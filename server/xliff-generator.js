@@ -92,6 +92,9 @@ ${transUnits}
         <note category="slide_id">${segment.slideId}</note>
         <note category="text_element_id">${segment.textElementId}</note>
         <note category="visual_context_id">${segment.visualContextId}</note>
+        ${segment.topic ? `<note category="topic">${this.escapeXml(segment.topic)}</note>` : ''}
+        ${segment.semanticContext ? `<note category="semantic_context">${this.escapeXml(segment.semanticContext)}</note>` : ''}
+        ${segment.contentElements ? `<note category="content_elements">${this.escapeXml(JSON.stringify(segment.contentElements))}</note>` : ''}
         ${segment.notes ? `<note category="analysis_notes">${this.escapeXml(segment.notes)}</note>` : ''}
       </trans-unit>`
   }
@@ -113,7 +116,11 @@ ${transUnits}
       isMerged: segment.isMerged || false,
       elementCount: segment.elementCount || 1,
       originalSegments: segment.originalSegments || [],
-      parentContextId: segment.parentContextId || null
+      parentContextId: segment.parentContextId || null,
+      // Enhanced semantic context
+      topic: segment.topic,
+      semanticContext: segment.semanticContext,
+      contentElements: segment.contentElements
     }
     
     return this.escapeXml(JSON.stringify(metadata, null, 2))

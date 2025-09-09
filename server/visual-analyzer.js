@@ -257,57 +257,45 @@ class VisualAnalyzer {
     ).join('\n')
 
     return `
-Analyze this PowerPoint slide and identify visual relationships between text elements for optimal translation segmentation.
+Analyze this PowerPoint slide image and identify distinct visual content areas. For each area, provide:
 
-CONTEXT: ${overallContext}
+1. **Bounding box coordinates** (x, y, width, height)
+2. **Content type** (title, body_text, image, chart, etc.)
+3. **Visual grouping** (which elements belong together)
+4. **TOPIC/CONTEXT** (what this segment is about semantically)
 
-TEXT ELEMENTS:
+**Text Elements in this slide:**
 ${textElementsInfo}
 
-Please analyze the visual layout and provide:
+**Overall Context:** ${overallContext}
 
-1. VISUAL_CONTEXTS: Identify distinct visual areas and their purposes:
-   - title_group: Multiple text boxes that form one title
-   - body_text: Main content paragraphs
-   - caption: Image/table captions
-   - bullet_list: Bullet point groups
-   - header_footer: Slide headers/footers
-   - callout: Highlighted text boxes
-   - navigation: Menu/navigation elements
-   - other: Other visual contexts
-
-2. TEXT_RELATIONSHIPS: Identify which text elements should be grouped together for translation
-
-3. SEGMENTATION_RECOMMENDATIONS: Suggest optimal segmentation boundaries
-
-Return your analysis as JSON in this format:
+**Output format:** JSON with this structure:
 {
-  "visualContexts": [
+  "visual_areas": [
     {
-      "id": "vc1",
-      "type": "title_group",
-      "description": "Main title spanning two text boxes",
-      "boundingBox": {"x": 100, "y": 50, "width": 600, "height": 80},
-      "relatedElements": ["s1_tb1", "s1_tb2"]
-    }
-  ],
-  "textRelationships": [
-    {
-      "group": "title_group_1",
-      "elements": ["s1_tb1", "s1_tb2"],
-      "reason": "Two text boxes positioned side by side forming one title"
-    }
-  ],
-  "segmentationRecommendations": [
-    {
-      "segmentId": "s1_tb1_tb2_combined",
-      "text": "Combined title text",
-      "visualContext": "title_group",
-      "confidence": "high",
-      "reasoning": "Visual analysis shows these elements form one cohesive title"
+      "id": "area_1",
+      "type": "mixed_content",
+      "coordinates": {"x": 100, "y": 50, "width": 800, "height": 200},
+      "grouped_with": ["area_2"],
+      "confidence": 0.95,
+      "topic": "music education - sight reading practice",
+      "context_description": "Text about reading musical notes combined with guitar image, suggesting music learning content",
+      "content_elements": [
+        {"type": "text", "content": "read the notes"},
+        {"type": "image", "description": "guitar illustration"}
+      ]
     }
   ]
 }
+
+**IMPORTANT INSTRUCTIONS:**
+- Focus on identifying semantic relationships between text and visual elements
+- For example, if text "read the notes" appears with a guitar image, the topic should be "music education" or "music sight-reading"
+- If you see financial data with charts, topic should be "financial analysis" or "business metrics"
+- If you see medical terms with medical images, topic should be "medical diagnosis" or "healthcare"
+- Provide specific, descriptive topics that would help translators understand the context
+- Include confidence scores (0.0-1.0) for each visual area
+- Ensure coordinates are within the slide bounds (typically 0-1920 width, 0-1080 height)
 `
   }
 
@@ -318,14 +306,46 @@ Return your analysis as JSON in this format:
    * @returns {Object} Enhanced slide data
    */
   enhanceSlideWithAnalysis(slideData, analysisResult) {
-    const { visualContexts = [], textRelationships = [], segmentationRecommendations = [] } = analysisResult
+    // Handle both old and new response formats
+    const { visual_areas = [], visualContexts = [], textRelationships = [], segmentationRecommendations = [] } = analysisResult
+
+    // Convert new visual_areas format to visualContexts format for compatibility
+    const enhancedVisualContexts = visual_areas.length > 0 
+      ? visual_areas.map(area => ({
+          id: area.id,
+          type: this.mapContentTypeToVisualContext(area.type),
+          description: area.context_description || area.topic || 'Visual area',
+          boundingBox: area.coordinates,
+          relatedElements: area.grouped_with || [],
+          topic: area.topic,
+          semanticContext: area.context_description,
+          contentElements: area.content_elements
+        }))
+      : visualContexts
 
     // Update visual contexts
-    slideData.visualContexts = visualContexts
+    slideData.visualContexts = enhancedVisualContexts
 
     // Update segments with visual analysis
     slideData.segments = slideData.segments.map(segment => {
-      // Find matching recommendation
+      // Find matching visual area
+      const visualArea = visual_areas.find(area => 
+        this.isTextElementInArea(segment, area)
+      )
+
+      if (visualArea) {
+        return {
+          ...segment,
+          visualContext: this.mapContentTypeToVisualContext(visualArea.type),
+          confidence: this.mapConfidenceScore(visualArea.confidence),
+          topic: visualArea.topic,
+          semanticContext: visualArea.context_description,
+          contentElements: visualArea.content_elements,
+          notes: `Visual analysis: ${visualArea.context_description || visualArea.topic}`
+        }
+      }
+
+      // Fallback to old format
       const recommendation = segmentationRecommendations.find(rec => 
         rec.segmentId.includes(segment.textElementId)
       )
@@ -342,7 +362,7 @@ Return your analysis as JSON in this format:
       return segment
     })
 
-    // Add combined segments for grouped elements
+    // Add combined segments for grouped elements (old format)
     textRelationships.forEach(relationship => {
       if (relationship.elements.length > 1) {
         const combinedText = relationship.elements
@@ -418,6 +438,67 @@ Return your analysis as JSON in this format:
     }
 
     return results
+  }
+
+  /**
+   * Map content type from GPT response to visual context type
+   * @param {string} contentType - Content type from GPT
+   * @returns {string} Visual context type
+   */
+  mapContentTypeToVisualContext(contentType) {
+    const mapping = {
+      'title': 'title_group',
+      'body_text': 'body_text',
+      'caption': 'caption',
+      'bullet_list': 'bullet_list',
+      'header_footer': 'header_footer',
+      'callout': 'callout',
+      'navigation': 'navigation',
+      'mixed_content': 'other',
+      'image': 'other',
+      'chart': 'other'
+    }
+    return mapping[contentType] || 'other'
+  }
+
+  /**
+   * Map confidence score from number to string
+   * @param {number} score - Confidence score (0.0-1.0)
+   * @returns {string} Confidence level
+   */
+  mapConfidenceScore(score) {
+    if (score >= 0.8) return 'high'
+    if (score >= 0.5) return 'medium'
+    return 'low'
+  }
+
+  /**
+   * Check if a text element is within a visual area
+   * @param {Object} segment - Text segment
+   * @param {Object} area - Visual area
+   * @returns {boolean} True if element is in area
+   */
+  isTextElementInArea(segment, area) {
+    if (!area.coordinates) return false
+    
+    const elementX = segment.coordinates.x
+    const elementY = segment.coordinates.y
+    const elementWidth = segment.coordinates.width
+    const elementHeight = segment.coordinates.height
+    
+    const areaX = area.coordinates.x
+    const areaY = area.coordinates.y
+    const areaWidth = area.coordinates.width
+    const areaHeight = area.coordinates.height
+    
+    // Check if element center is within area bounds
+    const elementCenterX = elementX + elementWidth / 2
+    const elementCenterY = elementY + elementHeight / 2
+    
+    return elementCenterX >= areaX && 
+           elementCenterX <= areaX + areaWidth &&
+           elementCenterY >= areaY && 
+           elementCenterY <= areaY + areaHeight
   }
 }
 

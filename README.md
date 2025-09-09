@@ -1,23 +1,22 @@
-# Glossary Suggester
+# Visual Segmenter
 
-An AI-powered tool that analyzes text documents and automatically suggests terms that should NOT be translated when localizing content to other languages.
+An AI-powered tool that analyzes PowerPoint presentations using visual context to create optimal text segmentation for translation purposes. This tool leverages GPT-5 Nano's visual analysis capabilities to understand slide layouts and text relationships that traditional rule-based segmentation might miss.
 
 ## Features
 
-- **Intelligent Context Analysis**: Uses OpenAI GPT-5-nano to understand document context before identifying terms
-- **Two-Pass Analysis**: 
-  1. Extracts comprehensive document context (origin, author role, audience, etc.)
-  2. Identifies glossary terms based on that context
-- **Categorized Results**: Terms are organized by category (company, product, technical, acronym, other)
-- **Confidence Scoring**: Each term includes a confidence level (high, medium, low)
-- **Interactive Editing**: Review and edit suggested terms before export
-- **Export Options**: Download results as CSV or JSON
+- **Visual Context Analysis**: Uses OpenAI GPT-5-nano to analyze slide images and understand visual relationships between text elements
+- **Intelligent Segmentation**: Combines textual rules with visual insights to create better translation segments
+- **High-Resolution Segmentation**: Segments at the highest possible resolution (slide + text element + visual context + coordinates)
+- **Visual Preview**: Interactive preview showing visual contexts overlaid on slide images
+- **Segmentation Review**: Review and edit AI-generated segmentation before export
+- **XLIFF Export**: Export results in XLIFF format with visual context metadata
 
 ## Prerequisites
 
 - Node.js (v16 or higher)
 - npm
 - OpenAI API key with access to GPT-5-nano model
+- PowerPoint files (.pptx) for analysis
 
 ## Setup
 
@@ -54,25 +53,27 @@ An AI-powered tool that analyzes text documents and automatically suggests terms
 
 ## Usage
 
-1. **Upload a File**: Drag and drop a `.txt` file (max 100KB for MVP) or click to browse
-2. **Wait for Analysis**: The AI will analyze your document in two passes
-3. **Review Results**: Terms are displayed by category with confidence scores
-4. **Edit as Needed**: Click "Edit" on any term to modify it, or "Delete" to remove
-5. **Export**: Download your glossary as CSV or JSON
+1. **Upload PowerPoint**: Drag and drop a `.pptx` file (max 10MB) or click to browse
+2. **Visual Analysis**: The AI analyzes each slide's visual layout and text relationships
+3. **Preview Results**: Review visual contexts overlaid on slide images
+4. **Edit Segmentation**: Review and modify the AI-generated segmentation
+5. **Export XLIFF**: Download the segmented content in XLIFF format with visual context metadata
 
 ## File Size Limitations
 
-The MVP version supports files up to 100KB. Larger files will need to be split or summarized.
+The MVP version supports PowerPoint files up to 10MB. Larger files may need to be optimized or split.
 
 ## Supported File Types
 
-Currently supports `.txt` files only. Support for PDF and DOCX is planned for future versions.
+Currently supports PowerPoint `.pptx` files only. Support for other presentation formats is planned for future versions.
 
 ## Architecture
 
 - **Frontend**: React + TypeScript + Vite
 - **Backend**: Node.js + Express
-- **AI**: OpenAI GPT-5-nano
+- **AI**: OpenAI GPT-5-nano with visual analysis capabilities
+- **PowerPoint Processing**: PptxGenJS for file parsing and slide extraction
+- **Image Processing**: Sharp for slide image generation
 - **File Upload**: Multer v2
 
 ## Development
@@ -81,11 +82,15 @@ The project structure:
 ```
 ├── src/                    # React frontend
 │   ├── components/         # UI components
+│   │   ├── FileUpload.tsx  # PowerPoint file upload
+│   │   └── ResultsDisplay.tsx # Visual analysis preview
 │   ├── App.tsx            # Main app component
-│   └── types.ts           # TypeScript definitions
+│   └── types.ts           # TypeScript definitions for visual segmentation
 ├── server/                # Backend server
-│   ├── index.js           # Express server
-│   └── analyzer.js        # OpenAI integration
+│   ├── index.js           # Express server with PowerPoint endpoint
+│   ├── powerpoint-processor.js # PowerPoint file processing
+│   ├── visual-analyzer.js # GPT-5 Nano visual analysis
+│   └── analyzer.js        # Legacy text analysis (for reference)
 ├── development_plan.md    # Detailed development plan
 └── goals                  # Original project goals
 ```

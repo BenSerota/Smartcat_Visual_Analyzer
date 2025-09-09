@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" version="1.2">
+  <file original="frogs_in_jungle_long.txt" source-language="en-US" target-language="es-ES" datatype="plaintext">
+    <header>
+      <tool tool-id="chatgpt" tool-name="GPT-5 Thinking"/>
+      <note>Segmentation: sentence-level; regex-based for demo; aligned EN-&gt;ES 1:1.</note>
+    </header>
+    <body>
+      <trans-unit id="s1">
+        <note>Auto-segmented sentence</note>
+        <source>Night drops over the rainforest like a curtain, and the frogs take the stage with no conductor but rain.</source>
+        <target>La noche cae sobre la selva como un telón, y las ranas suben al escenario sin más director que la lluvia.</target>
+      </trans-unit>
+      <trans-unit id="s2">
+        <note>Auto-segmented sentence</note>
+        <source>At first the calls are scattered—one metronomic click from a leaf, a rubbery trill from a vine—then the canopy tunes itself into a layered orchestra.</source>
+        <target>Al principio los llamados están dispersos—un clic metronómico desde una hoja, un trino gomoso desde una liana—y luego el dosel se afina en una orquesta en capas.</target>
+      </trans-unit>
+      <trans-unit id="s3">
+        <note>Auto-segmented sentence</note>
+        <source>Glass frogs press their bellies to moonlit leaves, green skin turning to stained glass while eggs shimmer like pearls along the veins.</source>
+        <target>Las ranas de cristal pegan el vientre a hojas iluminadas por la luna, su piel verde volviéndose vitral mientras los huevos brillan como perlas a lo largo de las venas.</target>
+      </trans-unit>
+      <trans-unit id="s4">
+        <note>Auto-segmented sentence</note>
+        <source>Poison dart frogs, bright as spilled paint, ferry tadpoles up rough-barked ladders to puddles that fit inside the cups of bromeliads.</source>
+        <target>Las ranas dardo, tan brillantes como pintura derramada, llevan renacuajos por escaleras de corteza hasta charcos que caben en las copas de las bromelias.</target>
+      </trans-unit>
+      <trans-unit id="s5">
+        <note>Auto-segmented sentence</note>
+        <source>Tree frogs move like thoughts—sudden, precise, and quiet—landing on petals that bend but do not bruise.</source>
+        <target>Las ranas arborícolas se mueven como pensamientos—repentinos, precisos y silenciosos—posándose en pétalos que se doblan pero no se magullan.</target>
+      </trans-unit>
+      <trans-unit id="s6">
+        <note>Auto-segmented sentence</note>
+        <source>Every puddle is a classroom, and every ripple is a lesson about hunger, caution, and the physics of being small.</source>
+        <target>Cada charco es un aula, y cada onda es una lección sobre el hambre, la cautela y la física de ser pequeño.</target>
+      </trans-unit>
+      <trans-unit id="s7">
+        <note>Auto-segmented sentence</note>
+        <source>When thunder travels the river like a drumline, the choir swells; notes braid with the hiss of rain until the forest speaks one wet language.</source>
+        <target>Cuando el trueno recorre el río como una línea de tambores, el coro crece; las notas se trenzan con el siseo de la lluvia hasta que el bosque habla un solo idioma húmedo.</target>
+      </trans-unit>
+      <trans-unit id="s8">
+        <note>Auto-segmented sentence</note>
+        <source>Predators patrol this grammar: snakes reading by heat, owls by whisper, fishing spiders by the tremor that betrays a heartbeat.</source>
+        <target>Los depredadores patrullan esta gramática: serpientes que leen por el calor, búhos por el susurro, arañas pescadoras por el temblor que delata un latido.</target>
+      </trans-unit>
+      <trans-unit id="s9">
+        <note>Auto-segmented sentence</note>
+        <source>The frogs edit themselves in response—pauses as commas, silence as a full stop, a sudden leap as the dash that changes the sentence.</source>
+        <target>Las ranas se editan a sí mismas en respuesta—las pausas como comas, el silencio como punto final, un salto repentino como el guion que cambia la oración.</target>
+      </trans-unit>
+      <trans-unit id="s10">
+        <note>Auto-segmented sentence</note>
+        <source>Scientists kneel in the mud with microphones and patience, logging first calls that predict the shift from dry to wet season within a margin of nights.</source>
+        <target>Los científicos se arrodillan en el barro con micrófonos y paciencia, registrando los primeros cantos que predicen el paso de la estación seca a la lluviosa con un margen de noches.</target>
+      </trans-unit>
+      <trans-unit id="s11">
+        <note>Auto-segmented sentence</note>
+        <source>Elders in nearby villages trade maps drawn in sound, saying which stream sings of clean water and which grove hums with medicine.</source>
+        <target>Los mayores de las aldeas cercanas intercambian mapas trazados con sonido, diciendo qué arroyo canta agua limpia y qué arboleda zumba con medicina.</target>
+      </trans-unit>
+      <trans-unit id="s12">
+        <note>Auto-segmented sentence</note>
+        <source>By midnight the air is stitched with threads of condensation, and each thread holds a chorus like beads on a string.</source>
+        <target>A medianoche el aire está cosido con hilos de condensación, y cada hilo sostiene un coro como cuentas en una cuerda.</target>
+      </trans-unit>
+      <trans-unit id="s13">
+        <note>Auto-segmented sentence</note>
+        <source>Tadpoles nibble algae in shadowed pools, spinning commas of silt that a passing tapir smears into ellipses.</source>
+        <target>Los renacuajos mordisquean algas en pozas sombreadas, dibujando comas de cieno que un tapir al pasar difumina en puntos suspensivos.</target>
+      </trans-unit>
+      <trans-unit id="s14">
+        <note>Auto-segmented sentence</note>
+        <source>Toward dawn, mist unhooks from the understory and climbs, and the last voices dim to a pulse you feel in your ribs more than hear.</source>
+        <target>Hacia el amanecer, la niebla se despega del sotobosque y asciende, y las últimas voces se atenúan hasta un pulso que sientes en las costillas más que oyes.</target>
+      </trans-unit>
+      <trans-unit id="s15">
+        <note>Auto-segmented sentence</note>
+        <source>When daylight angles through the leaves, frogs retreat to the grammar of camouflage—mottled clauses on bark, green adjectives in moss.</source>
+        <target>Cuando la luz del día atraviesa las hojas en ángulo, las ranas vuelven a la gramática del camuflaje—cláusulas moteadas en la corteza, adjetivos verdes en el musgo.</target>
+      </trans-unit>
+      <trans-unit id="s16">
+        <note>Auto-segmented sentence</note>
+        <source>The rainforest closes its book for a few bright hours, but it keeps the place with a bookmark of silence, ready to open again at the first drop of evening.</source>
+        <target>La selva cierra su libro por unas pocas horas luminosas, pero guarda la página con un marcapáginas de silencio, lista para abrirse de nuevo con la primera gota del atardecer.</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

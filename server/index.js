@@ -7,9 +7,15 @@ const pdfParse = require('pdf-parse')
 const mammoth = require('mammoth')
 const { parse } = require('node-html-parser')
 const { analyzeDocument } = require('./analyzer')
+const PowerPointProcessor = require('./powerpoint-processor')
+const VisualAnalyzer = require('./visual-analyzer')
 
 const app = express()
 const PORT = process.env.PORT || 3001
+
+// Initialize processors
+const pptProcessor = new PowerPointProcessor()
+const visualAnalyzer = new VisualAnalyzer()
 
 // Middleware
 app.use(cors())
@@ -27,15 +33,16 @@ const upload = multer({
       'text/plain',
       'text/html',
       'application/pdf',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     ]
-    const allowedExtensions = ['.txt', '.html', '.htm', '.pdf', '.docx']
+    const allowedExtensions = ['.txt', '.html', '.htm', '.pdf', '.docx', '.pptx']
     const fileExtension = path.extname(file.originalname).toLowerCase()
     
     if (allowedTypes.includes(file.mimetype) || allowedExtensions.includes(fileExtension)) {
       cb(null, true)
     } else {
-      cb(new Error('Only .txt, .html, .pdf, and .docx files are supported'))
+      cb(new Error('Only .txt, .html, .pdf, .docx, and .pptx files are supported'))
     }
   }
 })
@@ -106,6 +113,73 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
     })
   }
 })
+
+// PowerPoint Analysis Route
+app.post('/api/analyze-powerpoint', upload.single('file'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return res.status(500).json({ error: 'OpenAI API key not configured' })
+    }
+
+    const fileExtension = path.extname(req.file.originalname).toLowerCase()
+    
+    if (fileExtension !== '.pptx') {
+      return res.status(400).json({ 
+        error: 'Only PowerPoint (.pptx) files are supported for visual analysis' 
+      })
+    }
+
+    console.log(`Processing PowerPoint file: ${req.file.originalname}`)
+
+    // Step 1: Process PowerPoint file
+    const pptData = await pptProcessor.processPowerPoint(req.file.buffer, req.file.originalname)
+    console.log(`Extracted ${pptData.slides.length} slides`)
+
+    // Step 2: Perform visual analysis on each slide
+    console.log('Starting visual analysis...')
+    const analyzedSlides = await visualAnalyzer.analyzeSlides(pptData.slides)
+    console.log('Visual analysis complete')
+
+    // Step 3: Collect all segments
+    const allSegments = []
+    analyzedSlides.forEach(slide => {
+      allSegments.push(...slide.segments)
+    })
+
+    // Step 4: Generate translations for proof of concept
+    const segmentsWithTranslations = await generateTranslations(allSegments)
+
+    res.json({
+      analysis: {
+        fileName: pptData.fileName,
+        slides: analyzedSlides,
+        totalSlides: pptData.totalSlides,
+        analysisTimestamp: pptData.analysisTimestamp
+      },
+      segments: segmentsWithTranslations
+    })
+
+  } catch (error) {
+    console.error('Error analyzing PowerPoint:', error)
+    res.status(500).json({ 
+      error: error.message || 'Failed to analyze PowerPoint file' 
+    })
+  }
+})
+
+// Helper function to generate translations for proof of concept
+async function generateTranslations(segments) {
+  // For now, return segments without translation
+  // In production, you'd integrate with your translation engine
+  return segments.map(segment => ({
+    ...segment,
+    translation: `[Translation for: ${segment.text}]`
+  }))
+}
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

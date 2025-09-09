@@ -5,9 +5,10 @@ interface FileUploadProps {
   onFileUpload: (file: File) => void
   isProcessing: boolean
   error: string | null
+  acceptedTypes?: string
 }
 
-const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, error }) => {
+const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, error, acceptedTypes = ".pptx" }) => {
   const [isDragOver, setIsDragOver] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -39,24 +40,21 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
   }
 
   const handleFile = (file: File) => {
-    // Validate file type
+    // Validate file type based on accepted types
     const validTypes = [
-      'text/plain', 
-      'text/html',
-      'application/pdf', 
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      'application/vnd.openxmlformats-officedocument.presentationml.presentation'
     ]
-    const validExtensions = ['.txt', '.html', '.htm', '.pdf', '.docx']
+    const validExtensions = ['.pptx']
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase()
     
     if (!validTypes.includes(file.type) && !validExtensions.includes(fileExtension)) {
-      alert('Please upload a .txt, .html, .pdf, or .docx file')
+      alert('Please upload a PowerPoint (.pptx) file')
       return
     }
 
-    // Validate file size (5MB limit)
-    if (file.size > 5 * 1024 * 1024) {
-      alert('File size must be less than 5MB')
+    // Validate file size (10MB limit for PowerPoint files)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('File size must be less than 10MB')
       return
     }
 
@@ -75,7 +73,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
         <input
           ref={fileInputRef}
           type="file"
-          accept=".txt,.html,.htm,.pdf,.docx"
+          accept={acceptedTypes}
           onChange={handleFileInput}
           style={{ display: 'none' }}
           disabled={isProcessing}
@@ -84,16 +82,16 @@ const FileUpload: React.FC<FileUploadProps> = ({ onFileUpload, isProcessing, err
         {isProcessing ? (
           <div className="processing-indicator">
             <div className="spinner"></div>
-            <p>Analyzing document...</p>
-            <p className="processing-note">This may take up to 30 seconds</p>
+            <p>Analyzing PowerPoint presentation...</p>
+            <p className="processing-note">Performing visual analysis - this may take up to 2 minutes</p>
           </div>
         ) : (
           <>
-            <div className="upload-icon">📜</div>
-            <h2>Present thy scroll!</h2>
-            <p>Drop your document here, or click to browse</p>
-            <p className="file-types">Supports .txt, .html, .pdf, and .docx files</p>
-            <p className="file-size">Maximum file size: 5MB</p>
+            <div className="upload-icon">📊</div>
+            <h2>Upload PowerPoint Presentation</h2>
+            <p>Drop your .pptx file here, or click to browse</p>
+            <p className="file-types">Supports PowerPoint (.pptx) files only</p>
+            <p className="file-size">Maximum file size: 10MB</p>
           </>
         )}
       </div>

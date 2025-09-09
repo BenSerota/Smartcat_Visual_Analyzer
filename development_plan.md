@@ -1,18 +1,19 @@
-# Glossary Suggester - Development Plan
+# Visual Segmenter - Development Plan
 
 ## Project Overview
-Build a web-based tool that analyzes text files and automatically suggests terms that should NOT be translated (glossary terms) when the document is localized to other languages.
+Build a web-based tool that analyzes PowerPoint presentations using visual context to create optimal text segmentation for translation purposes. This tool leverages GPT-5 Nano's visual analysis capabilities to understand slide layouts and text relationships that traditional rule-based segmentation might miss.
 
 ## Core Objectives
 
 ### Primary Goal
-- Accept a text file as input and output a curated list of terms that should remain untranslated
-- Use LLM-based context understanding to identify non-obvious glossary terms
+- Accept a PowerPoint file as input and output optimal text segmentation for translation
+- Use LLM-based visual analysis to understand slide layouts and text relationships
+- Create high-resolution segmentation that considers visual context
 
 ### Secondary Goals
-- Provide confidence scores for suggested terms
-- Allow user review and editing of suggestions
-- Export glossary in standard formats (CSV, JSON, TMX)
+- Provide confidence scores for segmentation decisions
+- Allow user review and editing of segmentation suggestions
+- Export results in XLIFF format with visual context metadata
 
 ## Technical Architecture
 

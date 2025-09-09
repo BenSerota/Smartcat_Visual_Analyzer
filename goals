@@ -1,13 +1,20 @@
-let's build a real working prototype. 
+let's build a real working prototype for visual segmentation.
 
-my goal: take as input any text file T, proccess it, and output a list of terms (present in this file T) which should NOT be altered, in case that this file T is translated to a different language. We call this list a "glossary". 
-for example: in the sentence "The company Beacon proffited greatly from the stock's fall", the word "beacon" should not be translated, as it is understandable a name of a company, and should not be taken literally. 
-the same is true for : "Natural Intelligence is a great place to work at". 
-it is important to note that not all terms will be explicitly capitalized or be company names. we probably need to use an LLM to ensure we are getting the maximal context and understanding about the words we suspect are glossary terms.
+my goal: take as input any PowerPoint file P, process it, and output optimal text segmentation for translation purposes. The segmentation should be informed by visual context analysis, not just textual rules.
+
+for example: if a slide has two text boxes positioned side by side that visually form one title, they should be segmented together rather than separately. Traditional rule-based segmentation might treat them as separate segments, but visual analysis would recognize they form one cohesive unit.
+
+the same applies to: bullet points that are visually grouped, captions that belong to images, or text elements that are visually related but separated by layout.
+
+it is important to note that visual relationships are not always obvious from text alone. we need to use an LLM with visual analysis capabilities to understand the slide layout and text relationships.
 
 to accomplish this, I am thinking the following solution:
-1. have a file-upload page.
-2. user will be invited to on a button "suggest a glossary based on file".
-3. LLM API reads the file, and:
-4. based on its world knowledge, builds a short bio including: the probable origin of the file (company/institute), probable role of the writer in that entity (Product manager, marketer, engineer, physician, etc.,), and probable file target audience. It would also be worth thinking of potential terms that are associated with this bio (e.g., if we are realize we are dealing with a marketing campaign written by Coca-Cola, probably terms might include: "Coke Zero", "Coca", etc. )
-5. then read/ analyze the text in the file again and finalize the list of words we suspect as potential glossary terms.
+1. have a PowerPoint file-upload page.
+2. user uploads a .pptx file and clicks "analyze presentation".
+3. system extracts text elements with positioning data and generates slide images.
+4. GPT-5 Nano with visual analysis examines each slide image and:
+   - identifies visual contexts (title groups, body text, captions, bullet lists, etc.)
+   - understands relationships between text elements
+   - suggests optimal segmentation boundaries based on visual layout
+5. system combines textual rules with visual insights to create high-resolution segmentation.
+6. user can review and edit the segmentation before exporting to XLIFF format.

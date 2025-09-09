@@ -1,4 +1,4 @@
-const PptxGenJS = require('pptxgenjs')
+const pptx2json = require('pptx2json')
 const sharp = require('sharp')
 const fs = require('fs')
 const path = require('path')
@@ -28,20 +28,24 @@ class PowerPointProcessor {
    */
   async processPowerPoint(fileBuffer, fileName) {
     try {
+      console.log(`Processing PowerPoint file: ${fileName}, size: ${fileBuffer.length} bytes`)
+      
       // Save buffer to temporary file
       const tempFilePath = path.join(this.tempDir, `temp_${Date.now()}.pptx`)
       fs.writeFileSync(tempFilePath, fileBuffer)
+      console.log(`Saved temporary file: ${tempFilePath}`)
 
-      // Load the presentation
-      const pres = new PptxGenJS()
-      await pres.load(tempFilePath)
+      // Parse the PowerPoint file
+      console.log('Parsing PowerPoint presentation...')
+      const presentation = await pptx2json(tempFilePath)
+      console.log(`Successfully parsed presentation with ${presentation.slides.length} slides`)
 
       const slides = []
       const allSegments = []
 
       // Process each slide
-      for (let i = 0; i < pres.slides.length; i++) {
-        const slide = pres.slides[i]
+      for (let i = 0; i < presentation.slides.length; i++) {
+        const slide = presentation.slides[i]
         const slideData = await this.processSlide(slide, i + 1, fileName)
         slides.push(slideData)
         allSegments.push(...slideData.segments)
@@ -53,7 +57,7 @@ class PowerPointProcessor {
       return {
         fileName,
         slides,
-        totalSlides: pres.slides.length,
+        totalSlides: presentation.slides.length,
         analysisTimestamp: new Date().toISOString(),
         allSegments
       }
@@ -65,7 +69,7 @@ class PowerPointProcessor {
 
   /**
    * Process individual slide
-   * @param {Object} slide - PptxGenJS slide object
+   * @param {Object} slide - pptx2json slide object
    * @param {number} slideId - Slide number
    * @param {string} fileName - File name for context
    * @returns {Promise<Object>} Slide analysis data
@@ -75,24 +79,27 @@ class PowerPointProcessor {
     const visualContexts = []
     const segments = []
 
-    // Extract text elements with positioning
-    if (slide.objects) {
-      slide.objects.forEach((obj, index) => {
-        if (obj.type === 'text' && obj.text) {
+    // Extract text elements with positioning from pptx2json format
+    if (slide.shapes) {
+      slide.shapes.forEach((shape, index) => {
+        if (shape.text && shape.text.trim()) {
+          // Extract positioning information
+          const bounds = shape.bounds || { x: 0, y: 0, width: 0, height: 0 }
+          
           const textElement = {
             id: `s${slideId}_tb${index + 1}`,
-            text: obj.text,
+            text: shape.text.trim(),
             boundingBox: {
-              x: obj.options.x || 0,
-              y: obj.options.y || 0,
-              width: obj.options.w || 0,
-              height: obj.options.h || 0
+              x: bounds.x || 0,
+              y: bounds.y || 0,
+              width: bounds.width || 0,
+              height: bounds.height || 0
             },
-            fontSize: obj.options.fontSize,
-            fontFamily: obj.options.fontFace,
-            color: obj.options.color,
-            isBold: obj.options.bold,
-            isItalic: obj.options.italic
+            fontSize: shape.fontSize || 12,
+            fontFamily: shape.fontFamily || 'Arial',
+            color: shape.color || '#000000',
+            isBold: shape.bold || false,
+            isItalic: shape.italic || false
           }
           textElements.push(textElement)
 
@@ -103,7 +110,7 @@ class PowerPointProcessor {
             textElementId: textElement.id,
             visualContextId: 'vc1',
             coordinates: textElement.boundingBox,
-            text: obj.text,
+            text: shape.text.trim(),
             visualContext: 'other', // Will be updated by AI analysis
             confidence: 'medium'
           }

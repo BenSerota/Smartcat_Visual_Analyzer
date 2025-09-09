@@ -26,7 +26,7 @@ const storage = multer.memoryStorage()
 const upload = multer({ 
   storage: storage,
   limits: {
-    fileSize: 5 * 1024 * 1024 // 5MB limit to handle PDFs and DOCX
+    fileSize: 10 * 1024 * 1024 // 10MB limit for PowerPoint files
   },
   fileFilter: (req, file, cb) => {
     const allowedTypes = [
@@ -114,11 +114,31 @@ app.post('/api/analyze', upload.single('file'), async (req, res) => {
   }
 })
 
+// Global error handler for multer errors
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ 
+        error: 'File too large. Maximum file size is 10MB.' 
+      })
+    }
+    return res.status(400).json({ 
+      error: `File upload error: ${error.message}` 
+    })
+  }
+  next(error)
+})
+
 // PowerPoint Analysis Route
 app.post('/api/analyze-powerpoint', upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' })
+    }
+
+    // Check for multer errors
+    if (req.file === undefined) {
+      return res.status(400).json({ error: 'File upload failed - file may be too large (max 10MB)' })
     }
 
     if (!process.env.OPENAI_API_KEY) {

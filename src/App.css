@@ -51,3 +51,66 @@
   color: #666;
   font-size: 0.9rem;
 }
+
+/* Export Success Styles */
+.export-container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.export-success {
+  text-align: center;
+  background: #fff;
+  padding: 3rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.success-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.export-success h2 {
+  color: #28a745;
+  margin-bottom: 1rem;
+  font-size: 2rem;
+}
+
+.export-success p {
+  color: #6c757d;
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+}
+
+.export-details {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.export-details p {
+  margin: 0.5rem 0;
+  color: #495057;
+}
+
+.reset-button {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(0, 123, 255, 0.3);
+}
+
+.reset-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+}

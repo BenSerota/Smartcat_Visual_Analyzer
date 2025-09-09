@@ -9,6 +9,8 @@ const { parse } = require('node-html-parser')
 const { analyzeDocument } = require('./analyzer')
 const PowerPointProcessor = require('./powerpoint-processor')
 const VisualAnalyzer = require('./visual-analyzer')
+const SegmentationEngine = require('./segmentation-engine')
+const XLIFFGenerator = require('./xliff-generator')
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -16,6 +18,8 @@ const PORT = process.env.PORT || 3001
 // Initialize processors
 const pptProcessor = new PowerPointProcessor()
 const visualAnalyzer = new VisualAnalyzer()
+const segmentationEngine = new SegmentationEngine()
+const xliffGenerator = new XLIFFGenerator()
 
 // Middleware
 app.use(cors())
@@ -164,14 +168,13 @@ app.post('/api/analyze-powerpoint', upload.single('file'), async (req, res) => {
     const analyzedSlides = await visualAnalyzer.analyzeSlides(pptData.slides)
     console.log('Visual analysis complete')
 
-    // Step 3: Collect all segments
-    const allSegments = []
-    analyzedSlides.forEach(slide => {
-      allSegments.push(...slide.segments)
-    })
+    // Step 3: Generate intelligent segmentation
+    console.log('Generating visual segmentation...')
+    const optimizedSegments = segmentationEngine.generateSegmentation(analyzedSlides)
+    console.log(`Generated ${optimizedSegments.length} optimized segments`)
 
     // Step 4: Generate translations for proof of concept
-    const segmentsWithTranslations = await generateTranslations(allSegments)
+    const segmentsWithTranslations = await generateTranslations(optimizedSegments)
 
     res.json({
       analysis: {
@@ -180,7 +183,8 @@ app.post('/api/analyze-powerpoint', upload.single('file'), async (req, res) => {
         totalSlides: pptData.totalSlides,
         analysisTimestamp: pptData.analysisTimestamp
       },
-      segments: segmentsWithTranslations
+      segments: segmentsWithTranslations,
+      optimizedSegments: optimizedSegments
     })
 
   } catch (error) {
@@ -200,6 +204,61 @@ async function generateTranslations(segments) {
     translation: `[Translation for: ${segment.text}]`
   }))
 }
+
+// XLIFF Export endpoint
+app.post('/api/export-xliff', async (req, res) => {
+  try {
+    const { segments, fileName, sourceLanguage = 'en', targetLanguage = 'es' } = req.body
+
+    if (!segments || !Array.isArray(segments) || segments.length === 0) {
+      return res.status(400).json({ error: 'No segments provided for export' })
+    }
+
+    if (!fileName) {
+      return res.status(400).json({ error: 'File name is required' })
+    }
+
+    console.log(`Generating XLIFF for ${segments.length} segments from ${fileName}`)
+
+    // Generate XLIFF content
+    const xliffContent = xliffGenerator.generateXLIFF(
+      segments, 
+      fileName, 
+      sourceLanguage, 
+      targetLanguage
+    )
+
+    // Validate XLIFF
+    const validation = xliffGenerator.validateXLIFF(xliffContent)
+    if (!validation.isValid) {
+      console.error('XLIFF validation failed:', validation.errors)
+      return res.status(500).json({ 
+        error: 'XLIFF generation failed', 
+        details: validation.errors 
+      })
+    }
+
+    // Generate filename
+    const xliffFileName = xliffGenerator.generateXLIFFFileName(fileName, targetLanguage)
+
+    // Set response headers for file download
+    res.setHeader('Content-Type', 'application/xml')
+    res.setHeader('Content-Disposition', `attachment; filename="${xliffFileName}"`)
+    res.setHeader('Content-Length', Buffer.byteLength(xliffContent, 'utf8'))
+
+    console.log(`XLIFF export successful: ${xliffFileName} (${validation.transUnitCount} segments)`)
+    
+    // Send XLIFF content
+    res.send(xliffContent)
+
+  } catch (error) {
+    console.error('Error generating XLIFF:', error)
+    res.status(500).json({ 
+      error: 'Failed to generate XLIFF file', 
+      details: error.message 
+    })
+  }
+})
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

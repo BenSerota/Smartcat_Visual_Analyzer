@@ -2,12 +2,14 @@ import { useState } from 'react'
 import './App.css'
 import FileUpload from './components/FileUpload'
 import ResultsDisplay from './components/ResultsDisplay'
+import SegmentationEditor from './components/SegmentationEditor'
 import { PowerPointAnalysis, VisualSegment } from './types'
 
 function App() {
   const [isProcessing, setIsProcessing] = useState(false)
   const [analysis, setAnalysis] = useState<PowerPointAnalysis | null>(null)
   const [segments, setSegments] = useState<VisualSegment[] | null>(null)
+  const [optimizedSegments, setOptimizedSegments] = useState<VisualSegment[] | null>(null)
   const [fileName, setFileName] = useState<string>('')
   const [error, setError] = useState<string | null>(null)
   const [currentStep, setCurrentStep] = useState<'upload' | 'analysis' | 'preview' | 'segmentation' | 'export'>('upload')
@@ -17,6 +19,7 @@ function App() {
     setError(null)
     setAnalysis(null)
     setSegments(null)
+    setOptimizedSegments(null)
     setFileName(file.name)
     setCurrentStep('analysis')
 
@@ -36,6 +39,7 @@ function App() {
       const data = await response.json()
       setAnalysis(data.analysis)
       setSegments(data.segments)
+      setOptimizedSegments(data.optimizedSegments || data.segments)
       setCurrentStep('preview')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred')
@@ -43,6 +47,78 @@ function App() {
     } finally {
       setIsProcessing(false)
     }
+  }
+
+  const handleSegmentsChange = (updatedSegments: VisualSegment[]) => {
+    setOptimizedSegments(updatedSegments)
+  }
+
+  const handleExportXLIFF = async () => {
+    if (!optimizedSegments || optimizedSegments.length === 0) {
+      setError('No segments available for export')
+      return
+    }
+
+    try {
+      setIsProcessing(true)
+      
+      const response = await fetch('/api/export-xliff', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          segments: optimizedSegments,
+          fileName: fileName,
+          sourceLanguage: 'en',
+          targetLanguage: 'es'
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error(`Export failed: ${response.statusText}`)
+      }
+
+      // Get the filename from the response headers
+      const contentDisposition = response.headers.get('Content-Disposition')
+      const filename = contentDisposition 
+        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+        : `${fileName.replace(/\.[^/.]+$/, '')}_visual_segmented.xlf`
+
+      // Create blob and download
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(a)
+
+      setCurrentStep('export')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed')
+    } finally {
+      setIsProcessing(false)
+    }
+  }
+
+  const handleProceedToSegmentation = () => {
+    setCurrentStep('segmentation')
+  }
+
+  const handleBackToPreview = () => {
+    setCurrentStep('preview')
+  }
+
+  const handleBackToUpload = () => {
+    setCurrentStep('upload')
+    setAnalysis(null)
+    setSegments(null)
+    setOptimizedSegments(null)
+    setFileName('')
+    setError(null)
   }
 
   return (
@@ -76,35 +152,40 @@ function App() {
             analysis={analysis}
             segments={segments}
             fileName={fileName}
-            onReset={() => {
-              setAnalysis(null)
-              setSegments(null)
-              setError(null)
-              setFileName('')
-              setCurrentStep('upload')
-            }}
-            onProceedToSegmentation={() => setCurrentStep('segmentation')}
+            onReset={handleBackToUpload}
+            onProceedToSegmentation={handleProceedToSegmentation}
           />
         )}
 
-        {currentStep === 'segmentation' && segments && (
-          <div className="segmentation-editor">
-            <h2>Review and Edit Segmentation</h2>
-            <p>Review the AI-generated segmentation and make adjustments as needed</p>
-            {/* Segmentation editor component will go here */}
-            <button onClick={() => setCurrentStep('export')}>
-              Export XLIFF
-            </button>
-          </div>
+        {currentStep === 'segmentation' && optimizedSegments && (
+          <SegmentationEditor
+            segments={optimizedSegments}
+            onSegmentsChange={handleSegmentsChange}
+            onExport={handleExportXLIFF}
+            onBack={handleBackToPreview}
+          />
         )}
 
         {currentStep === 'export' && (
           <div className="export-container">
-            <h2>Export Complete</h2>
-            <p>Your XLIFF file has been generated with visual context-aware segmentation</p>
-            <button onClick={() => setCurrentStep('upload')}>
-              Process Another File
-            </button>
+            <div className="export-success">
+              <div className="success-icon">🎉</div>
+              <h2>Export Complete!</h2>
+              <p>Your XLIFF file has been generated with visual context-aware segmentation</p>
+              <div className="export-details">
+                <p><strong>File:</strong> {fileName}</p>
+                <p><strong>Segments:</strong> {optimizedSegments?.length || 0}</p>
+                <p><strong>Format:</strong> XLIFF 1.2 with visual metadata</p>
+              </div>
+              <div className="export-actions">
+                <button 
+                  onClick={handleBackToUpload}
+                  className="reset-button"
+                >
+                  Process Another File
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

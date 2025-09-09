@@ -257,45 +257,52 @@ class VisualAnalyzer {
     ).join('\n')
 
     return `
-Analyze this PowerPoint slide image and identify distinct visual content areas. For each area, provide:
+You are analyzing a PowerPoint slide image that contains text elements positioned on a white background. The image shows text content with bounding boxes around each text element.
 
-1. **Bounding box coordinates** (x, y, width, height)
-2. **Content type** (title, body_text, image, chart, etc.)
-3. **Visual grouping** (which elements belong together)
-4. **TOPIC/CONTEXT** (what this segment is about semantically)
+**TASK:** Analyze the visual layout and text content to identify distinct semantic areas and their topics.
 
 **Text Elements in this slide:**
 ${textElementsInfo}
 
 **Overall Context:** ${overallContext}
 
-**Output format:** JSON with this structure:
+**ANALYSIS REQUIREMENTS:**
+1. Look at the text content and positioning to identify logical groupings
+2. Determine the semantic topic/context for each area
+3. Provide bounding box coordinates for each visual area
+4. Identify which text elements belong together
+
+**OUTPUT FORMAT:** Return ONLY valid JSON in this exact structure:
 {
   "visual_areas": [
     {
       "id": "area_1",
-      "type": "mixed_content",
-      "coordinates": {"x": 100, "y": 50, "width": 800, "height": 200},
-      "grouped_with": ["area_2"],
-      "confidence": 0.95,
-      "topic": "music education - sight reading practice",
-      "context_description": "Text about reading musical notes combined with guitar image, suggesting music learning content",
+      "type": "title_section",
+      "coordinates": {"x": 100, "y": 50, "width": 600, "height": 80},
+      "grouped_with": [],
+      "confidence": 0.9,
+      "topic": "presentation title",
+      "context_description": "Main title of the presentation",
       "content_elements": [
-        {"type": "text", "content": "read the notes"},
-        {"type": "image", "description": "guitar illustration"}
+        {"type": "text", "content": "actual text content here"}
       ]
     }
   ]
 }
 
-**IMPORTANT INSTRUCTIONS:**
-- Focus on identifying semantic relationships between text and visual elements
-- For example, if text "read the notes" appears with a guitar image, the topic should be "music education" or "music sight-reading"
-- If you see financial data with charts, topic should be "financial analysis" or "business metrics"
-- If you see medical terms with medical images, topic should be "medical diagnosis" or "healthcare"
-- Provide specific, descriptive topics that would help translators understand the context
-- Include confidence scores (0.0-1.0) for each visual area
-- Ensure coordinates are within the slide bounds (typically 0-1920 width, 0-1080 height)
+**TOPIC EXAMPLES:**
+- "presentation title" for main titles
+- "financial analysis" for financial data
+- "business metrics" for business charts
+- "medical diagnosis" for medical content
+- "educational content" for learning materials
+- "marketing message" for promotional content
+
+**IMPORTANT:** 
+- Return ONLY the JSON object, no other text
+- Use actual text content from the slide
+- Provide realistic coordinates based on the image layout
+- Focus on semantic meaning, not just visual appearance
 `
   }
 

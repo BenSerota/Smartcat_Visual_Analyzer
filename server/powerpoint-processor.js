@@ -214,29 +214,52 @@ class PowerPointProcessor {
   }
 
   /**
-   * Generate slide image (placeholder implementation)
-   * In a real implementation, this would render the slide to an image
-   * @param {Object} slide - Slide object
+   * Generate slide image with actual text content for GPT-5 Nano analysis
+   * @param {Object} slide - Slide object with text elements
    * @param {number} slideId - Slide ID
    * @returns {Promise<string>} Base64 encoded image
    */
   async generateSlideImage(slide, slideId) {
-    // For now, create a placeholder image
-    // In production, you'd use a library like puppeteer or similar to render slides
-    const placeholderSvg = `
-      <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
-        <rect width="800" height="600" fill="#f0f0f0" stroke="#ccc" stroke-width="2"/>
-        <text x="400" y="300" text-anchor="middle" font-family="Arial" font-size="24" fill="#666">
-          Slide ${slideId} Preview
-        </text>
-        <text x="400" y="350" text-anchor="middle" font-family="Arial" font-size="16" fill="#999">
-          Visual analysis will be performed here
-        </text>
-      </svg>
-    `
-
     try {
-      const buffer = Buffer.from(placeholderSvg)
+      // Get text elements from the slide
+      const textElements = slide.textElements || []
+      
+      // Create an SVG with actual text content positioned correctly
+      const textElementsSvg = textElements.map((element, index) => {
+        const x = Math.max(50, Math.min(750, element.boundingBox.x))
+        const y = Math.max(50, Math.min(550, element.boundingBox.y + 20))
+        const fontSize = Math.max(12, Math.min(24, element.fontSize || 16))
+        const fontWeight = element.isBold ? 'bold' : 'normal'
+        const fontStyle = element.isItalic ? 'italic' : 'normal'
+        
+        // Truncate text if too long
+        const displayText = element.text.length > 100 ? element.text.substring(0, 100) + '...' : element.text
+        
+        return `
+          <rect x="${x - 5}" y="${y - fontSize - 5}" width="${element.boundingBox.width + 10}" height="${element.boundingBox.height + 10}" 
+                fill="rgba(255,255,255,0.8)" stroke="#ddd" stroke-width="1" rx="3"/>
+          <text x="${x}" y="${y}" font-family="Arial, sans-serif" font-size="${fontSize}" 
+                font-weight="${fontWeight}" font-style="${fontStyle}" fill="#333">
+            ${this.escapeXml(displayText)}
+          </text>
+        `
+      }).join('\n')
+
+      const slideSvg = `
+        <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+          <rect width="800" height="600" fill="#ffffff" stroke="#ccc" stroke-width="2"/>
+          <text x="400" y="30" text-anchor="middle" font-family="Arial" font-size="18" font-weight="bold" fill="#333">
+            Slide ${slideId} - Text Content Analysis
+          </text>
+          <line x1="50" y1="50" x2="750" y2="50" stroke="#ddd" stroke-width="1"/>
+          ${textElementsSvg}
+          <text x="400" y="580" text-anchor="middle" font-family="Arial" font-size="12" fill="#999">
+            ${textElements.length} text elements detected
+          </text>
+        </svg>
+      `
+
+      const buffer = Buffer.from(slideSvg)
       const pngBuffer = await sharp(buffer).png().toBuffer()
       return `data:image/png;base64,${pngBuffer.toString('base64')}`
     } catch (error) {
@@ -244,6 +267,20 @@ class PowerPointProcessor {
       // Return a simple base64 placeholder
       return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=='
     }
+  }
+
+  /**
+   * Escape XML special characters
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
+   */
+  escapeXml(text) {
+    return text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;')
   }
 
   /**
